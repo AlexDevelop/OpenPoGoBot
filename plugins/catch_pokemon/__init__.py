@@ -16,7 +16,7 @@ def pokemon_found(bot, encounters=None):
     if encounters is None or len(encounters) == 0:
         return
 
-    def log(text, color="black"):
+    def log(text, color="white"):
         logger.log(text, color=color, prefix="Catch")
 
     for pokemon_encounter in encounters:
@@ -102,12 +102,12 @@ def pokemon_found(bot, encounters=None):
 def throw_pokeball(bot, encounter_id, pokeball, spawn_point_id, pokemon):
     # type: (PokemonGoBot, int, int, str, Pokemon) -> bool
 
-    def log(text, color="black"):
+    def log(text, color="white"):
         logger.log(text, color=color, prefix="Catch")
 
     bot.api_wrapper.catch_pokemon(encounter_id=encounter_id,
                                   pokeball=pokeball,
-                                  normalized_reticle_size=1.950 - random.random() / 200,
+                                  normalized_reticle_size=1.950 - random.random() / 400,
                                   spawn_point_id=spawn_point_id,
                                   hit_pokemon=True,
                                   spin_modifier=1,

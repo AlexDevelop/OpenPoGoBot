@@ -20,7 +20,7 @@ except ImportError:
     LCD = None
 
 
-def log(string, color="black", prefix=None, fire_event=True):
+def log(string, color="white", prefix=None, fire_event=True):
     # type: (str, Optional[str], Optional[str], Optional[bool]) -> None
     if fire_event:
         manager.fire("logging", text=string, color=color, prefix=prefix)
@@ -29,12 +29,15 @@ def log(string, color="black", prefix=None, fire_event=True):
 
 
 @manager.on("logging")
-def _log(text="", color="black", prefix=None):
+def _log(text="", color="white", prefix=None):
     # type: (str, Optional[str], Optional[str]) -> None
     color_hex = {
         'green': Fore.GREEN,
         'yellow': Fore.YELLOW,
-        'red': Fore.RED
+        'red': Fore.RED,
+        'blue': Fore.BLUE,
+        'cyan': Fore.CYAN,
+        'black': Fore.BLACK,
     }
     string = str(text)
     output = u"[" + time.strftime("%Y-%m-%d %H:%M:%S") + u"] "

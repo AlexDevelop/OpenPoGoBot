@@ -48,6 +48,9 @@ class PokemonGoBot(object):
         self.navigator = None
         self.mapper = None
 
+        self.start_time = datetime.datetime.now()
+        self.last_notify_time = datetime.datetime.now()
+
     def _init_plugins(self):
         # create a plugin manager
         self.plugin_manager = PluginManager('./plugins')
@@ -98,10 +101,16 @@ class PokemonGoBot(object):
                 self.stepper.get_route_between(position_lat, position_lng, destination.target_lat, destination.target_lng, destination.target_alt)
             )
 
+            count = 0
             for _ in self.stepper.step(destination):
                 self.work_on_cells(
                     self.mapper.get_cells_at_current_position()
                 )
+
+                if count % 20 == 0:
+                    logger.log('Walking -- {} meters'.format(count * (self.stepper.AVERAGE_STRIDE_LENGTH_IN_METRES *
+                                                                      self.config.walk)), color="cyan")
+                count += 1
 
             position_lat = destination.target_lat
             position_lng = destination.target_lng
@@ -151,6 +160,22 @@ class PokemonGoBot(object):
 
         logger.log('[+] Login to Pokemon Go successful.', 'green')
 
+        self.get_player_and_inventory_data()
+
+        # Testing
+        # self.drop_item(Item.ITEM_POTION.value,1)
+        # exit(0)
+
+        if self.config.initial_transfer:
+            self.fire("pokemon_bag_full")
+
+        if self.config.recycle_items:
+            self.fire("item_bag_full")
+
+        logger.log('[#]')
+        self.update_player_and_inventory()
+
+    def get_player_and_inventory_data(self):
         # chain subrequests (methods) into one RPC call
 
         # get player profile call
@@ -183,18 +208,6 @@ class PokemonGoBot(object):
             logger.log('[#] -- Experience until next level: {}'.format(player.next_level_xp - player.experience))
             logger.log('[#] -- Pokemon Captured: {}'.format(player.pokemons_captured))
             logger.log('[#] -- Pokestops Visited: {}'.format(player.poke_stop_visits))
-        # Testing
-        # self.drop_item(Item.ITEM_POTION.value,1)
-        # exit(0)
-
-        if self.config.initial_transfer:
-            self.fire("pokemon_bag_full")
-
-        if self.config.recycle_items:
-            self.fire("item_bag_full")
-
-        logger.log('[#]')
-        self.update_player_and_inventory()
 
     def update_player_and_inventory(self):
         # type: () -> Dict[str, object]
@@ -295,6 +308,11 @@ class PokemonGoBot(object):
         self.api_wrapper.get_inventory()
         self.api_wrapper.check_awarded_badges()
         self.api_wrapper.call()
+
+        difference_in_seconds = (datetime.datetime.now() - self.last_notify_time).seconds
+        if difference_in_seconds >= 60:
+            self.get_player_and_inventory_data()
+            self.last_notify_time = datetime.datetime.now()
 
     def get_pokemon_count(self):
         # type: () -> int

@@ -23,6 +23,7 @@ class Stepper(object):
 
         self.speed = self.config.walk if self.config.walk > 0 else 4.16
         self.path_finder = None
+        self.steps = None
         self.pos = 1
         self.step_limit = self.config.max_steps
         self.step_limit_squared = self.step_limit ** 2
@@ -53,9 +54,11 @@ class Stepper(object):
         dist = distance(self.current_lat, self.current_lng, destination.target_lat, destination.target_lng)
 
         if destination.name:
-            logger.log("Walking towards {} ({} away, eta {})".format(destination.name,
+            logger.log("Walking towards {} ({} away, eta {}, coords: {},{})".format(destination.name,
                                                                      format_dist(dist, self.config.distance_unit),
-                                                                     format_time(len(destination.steps))),
+                                                                     format_time(len(destination.steps)),
+                                                                                    destination.target_lat,
+                                                                                    destination.target_lng),
                        prefix="Navigation")
 
         for step in destination.steps:
@@ -96,6 +99,7 @@ class Stepper(object):
             d_long = (to_lng - from_lng) / steps
 
             total_steps = int(ceil(steps))
+            self.steps = total_steps
             for _ in range(total_steps):
                 from_lat += d_lat
                 from_lng += d_long

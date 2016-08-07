@@ -4,7 +4,7 @@ from pokemongo_bot.event_manager import manager
 from pokemongo_bot import logger
 
 
-def log(text, color="black"):
+def log(text, color="white"):
     logger.log(text, color=color, prefix="Incubator")
 
 

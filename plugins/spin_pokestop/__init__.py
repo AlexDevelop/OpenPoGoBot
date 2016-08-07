@@ -26,7 +26,7 @@ def filter_pokestops(pokestops=None):
 def visit_near_pokestops(bot, pokestops=None):
     # type: (PokemonGoBot, Optional[List[Fort]]) -> Dict[Str, List[PokeStop]]
 
-    def log(text, color="black"):
+    def log(text, color="white"):
         logger.log(text, color=color, prefix="PokeStop")
 
     if pokestops is None:
@@ -55,7 +55,7 @@ def spin_pokestop(bot, pokestop=None):
     if pokestop is None:
         return
 
-    def log(text, color="black"):
+    def log(text, color="white"):
         logger.log(text, color=color, prefix="PokeStop")
 
     fort_id = pokestop.fort_id

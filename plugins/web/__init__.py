@@ -33,7 +33,7 @@ def run_flask():
         return app.send_static_file(path)
 
     @manager.on("logging")
-    def logging_event(text="", color="black"):
+    def logging_event(text="", color="white"):
         line = {"output": text, "color": color}
         logging_buffer.append(line)
         socketio.emit("logging", [line], namespace="/event")

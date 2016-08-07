@@ -8,7 +8,7 @@ from pokemongo_bot import logger
 def filter_pokemon(bot, transfer_list=None, pokemon=None):
     # type: (PokemonGoBot, Optional[List[Pokemon]], Pokemon) -> Dict[Str, List[Pokemon]]
 
-    def log(text, color="black"):
+    def log(text, color="white"):
         logger.log(text, color=color, prefix="Transfer")
 
     if transfer_list is None:
@@ -91,7 +91,7 @@ def filter_pokemon(bot, transfer_list=None, pokemon=None):
 def transfer_pokemon(bot, transfer_list=None):
     # type: (PokemonGoBot, Optional[List[Pokemon]]) -> None
 
-    def log(text, color="black"):
+    def log(text, color="white"):
         logger.log(text, color=color, prefix="Transfer")
 
     if transfer_list is None or len(transfer_list) == 0:
