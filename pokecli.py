@@ -361,7 +361,10 @@ def main():
         logger.log('[x] Starting PokemonGo Bot....', 'green')
 
         while True:
-            bot.run()
+            try:
+                bot.run()
+            except Exception as e:
+                print(e)
 
     except KeyboardInterrupt:
         logger.log('[x] Exiting PokemonGo Bot', 'red')
