@@ -13,7 +13,7 @@ from googlemaps.exceptions import ApiError
 
 from pokemongo_bot import logger, human_behaviour, item_list
 from pokemongo_bot.event_manager import manager
-from pokemongo_bot.utils import filtered_forts, distance, convert_to_utf8
+from pokemongo_bot.utils import filtered_forts, distance
 from pokemongo_bot.human_behaviour import sleep
 from pokemongo_bot.item_list import Item
 from pokemongo_bot.mapper import Mapper
@@ -67,7 +67,9 @@ class PokemonGoBot(object):
         loaded_plugins = sorted(self.plugin_manager.get_loaded_plugins().keys())
         sleep(2)
         logger.log("Plugins loaded: {}".format(loaded_plugins), color="green", prefix="Plugins")
-        logger.log("Events available: {}".format(manager.get_registered_events()), color="green", prefix="Events")
+        if self.config.print_events:
+            logger.log("Events available: {}".format(manager.get_registered_events()), color="green", prefix="Events")
+            manager.print_all_event_pipelines()
 
     def start(self):
         self._setup_logging()
@@ -106,12 +108,18 @@ class PokemonGoBot(object):
         # Work on all the initial cells
         self.work_on_cells(map_cells)
 
-        position_lat = self.stepper.current_lat
-        position_lng = self.stepper.current_lng
-
         for destination in self.navigator.navigate(map_cells):
+            position_lat = self.stepper.current_lat
+            position_lng = self.stepper.current_lng
+
             destination.set_steps(
-                self.stepper.get_route_between(position_lat, position_lng, destination.target_lat, destination.target_lng, destination.target_alt)
+                self.stepper.get_route_between(
+                    position_lat,
+                    position_lng,
+                    destination.target_lat,
+                    destination.target_lng,
+                    destination.target_alt
+                )
             )
 
             count = 0
@@ -200,6 +208,7 @@ class PokemonGoBot(object):
             inventory = response_dict['inventory']
             self.candies = response_dict['candy']
             pokemon = response_dict['pokemon']
+            eggs = response_dict['eggs']
             creation_date = player.get_creation_date()
 
             balls_stock = self.pokeball_inventory()
@@ -211,25 +220,26 @@ class PokemonGoBot(object):
             logger.log('[#] Username: {}'.format(player.username))
             logger.log('[#] Acccount creation: {}'.format(creation_date))
             logger.log('[#] Bag storage: {}/{}'.format(inventory["count"], player.max_item_storage))
-            logger.log('[#] Pokemon storage: {}/{}'.format(len(pokemon), player.max_pokemon_storage))
-            logger.log('[#] Stardust: {}'.format(stardust))
+            logger.log('[#] Pokemon storage: {}/{}'.format(len(pokemon) + len(eggs), player.max_pokemon_storage))
+            logger.log('[#] Stardust: {:,}'.format(stardust))
             logger.log('[#] Pokecoins: {}'.format(pokecoins))
             logger.log('[#] Poke Balls: {}'.format(balls_stock[1]))
             logger.log('[#] Great Balls: {}'.format(balls_stock[2]))
             logger.log('[#] Ultra Balls: {}'.format(balls_stock[3]))
             logger.log('[#] -- Level: {}'.format(player.level))
-            logger.log('[#] -- Experience: {}'.format(player.experience))
-            logger.log('[#] -- Experience until next level: {}'.format(player.next_level_xp - player.experience))
-            logger.log('[#] -- Pokemon captured: {}'.format(player.pokemons_captured))
-            logger.log('[#] -- Pokestops visited: {}'.format(player.poke_stop_visits))
+            logger.log('[#] -- Experience: {:,}'.format(player.experience))
+            logger.log('[#] -- Experience until next level: {:,}'.format(player.next_level_xp - player.experience))
+            logger.log('[#] -- Pokemon captured: {:,}'.format(player.pokemons_captured))
+            logger.log('[#] -- Pokestops visited: {:,}'.format(player.poke_stop_visits))
         # Testing
         # self.drop_item(Item.ITEM_POTION.value,1)
         # exit(0)
 
     def update_player_and_inventory(self):
         # type: () -> Dict[str, object]
-        self.api_wrapper.get_player().get_inventory()
-        return self.api_wrapper.call()
+        response_dict = self.api_wrapper.get_player().get_inventory().call()
+        self.candies = response_dict['candy']
+        return response_dict
 
     def add_candies(self, name=None, pokemon_candies=None):
         for pokemon in self.pokemon_list:

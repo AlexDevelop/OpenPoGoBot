@@ -31,12 +31,13 @@ class Event(object):
     def add_listener(self, listener, priority=0):
         self.num_listeners += 1
         if priority not in self.listeners:
-            self.listeners[priority] = set()
-        self.listeners[priority].add(listener)
+            self.listeners[priority] = list()
+        self.listeners[priority].append(listener)
 
     def remove_listener(self, listener):
         for priority in self.listeners:
-            self.listeners[priority].discard(listener)
+            print(self.listeners[priority])
+            self.listeners[priority].remove(listener)
         self.num_listeners -= 1
 
     def fire(self, **kwargs):
@@ -74,6 +75,21 @@ class Event(object):
                 if return_dict is not None:
                     kwargs.update(return_dict)
         return kwargs
+
+    def print_event_pipeline(self):
+        if self.num_listeners == 0:
+            self.log("Event pipeline for \"{}\" is empty.".format(self.name))
+        output = []
+        priorities = sorted(self.listeners, key=lambda event_priority: event_priority)
+        for priority in priorities:
+            if len(self.listeners[priority]) == 0:
+                continue
+            func_names = [f.__name__ for f in self.listeners[priority]]
+            output.append("{} ({})".format(priority, " -> ".join(func_names)))
+        if len(output) == 0:
+            self.log("Event pipeline for \"{}\" is empty.".format(self.name))
+        self.log("Event pipeline for \"{}\":".format(self.name), color="yellow")
+        self.log(" -> ".join(output) + "\n", color="yellow")
 
 
 class EventManager(object):
@@ -121,6 +137,10 @@ class EventManager(object):
                 event_list.append(event_name)
 
         return sorted(event_list)
+
+    def print_all_event_pipelines(self):
+        for event_name in self.events:
+            self.events[event_name].print_event_pipeline()
 
 
 # This will only be loaded once

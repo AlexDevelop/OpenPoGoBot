@@ -12,6 +12,14 @@ def register_bot_events(socketio, state):
         emitted_object = {
             "username": player.username,
             "level": player.level,
+            "player": {
+                "level": player.level,
+                "unique_pokedex_entries": player.unique_pokedex_entries,
+                "pokemons_captured": player.pokemons_captured,
+                "next_level_xp": player.next_level_xp,
+                "prev_level_xp": player.prev_level_xp,
+                "experience": player.experience
+            },
             "coordinates": bot.get_position(),
             "storage": {
                 "max_item_storage": player.max_item_storage,
@@ -66,13 +74,24 @@ def register_bot_events(socketio, state):
         socketio.emit("pokestop_visited", emitted_object, namespace="/event")
 
     @manager.on("pokemon_caught")
-    def pokemon_caught(bot=None, pokemon=None):
+    def pokemon_caught(bot=None, pokemon=None, position=None):
         if pokemon is None:
             return
         emitted_object = {
-            "pokemon": pokemon
+            "pokemon": pokemon,
+            "position": position
         }
         socketio.emit("pokemon_caught", emitted_object, namespace="/event")
+
+    @manager.on("pokemon_evolved")
+    def pokemon_evolved(bot=None, pokemon=None, evolution=None):
+        if pokemon is None:
+            return
+        emitted_object = {
+            "pokemon": pokemon,
+            "evolution": evolution
+        }
+        socketio.emit("pokemon_evolved", emitted_object, namespace="/event")
 
     @manager.on("after_transfer_pokemon")
     def transfer_pokemon(bot=None, pokemon=None):
@@ -81,4 +100,4 @@ def register_bot_events(socketio, state):
         emitted_object = {
             "pokemon": pokemon
         }
-        socketio.emit("transfer_pokemon", emitted_object, namespace="/event")
+        socketio.emit("transfered_pokemon", emitted_object, namespace="/event")

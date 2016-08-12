@@ -21,12 +21,8 @@ class Stepper(object):
         self.api_wrapper = bot.api_wrapper
         self.config = bot.config
 
-        self.speed = self.config.walk if self.config.walk > 0 else 4.16
+        self.speed = 4.16 if (self.config.walk is None or self.config.walk <= 0) else self.config.walk
         self.path_finder = None
-        self.steps = None
-        self.pos = 1
-        self.step_limit = self.config.max_steps
-        self.step_limit_squared = self.step_limit ** 2
 
         self.origin_lat = self.bot.position[0]
         self.origin_lng = self.bot.position[1]
@@ -48,19 +44,20 @@ class Stepper(object):
         self.api_wrapper.set_position(*position)
 
     def step(self, destination):
-        # type: (Destination) -> None
+        # type: (Destination) -> List[(float, float, float)]
         self.bot.fire("walking_started", coords=(destination.target_lat, destination.target_lng, destination.target_alt))
 
         dist = distance(self.current_lat, self.current_lng, destination.target_lat, destination.target_lng)
 
         if destination.name:
-            logger.log("Walking towards {} ({} away, eta {}, coords: {},{})".format(destination.name,
+            logger.log("Walking towards {} ({} away, eta {})".format(destination.name,
                                                                      format_dist(dist, self.config.distance_unit),
-                                                                     format_time(destination.get_step_count()),
-                                                                     destination.target_lat,
-                                                                     destination.target_lng), prefix="Navigating")
+                                                                     format_time(destination.get_step_count())),
+                       prefix="Navigation")
 
         for step in destination.step():
+            if distance(self.current_lat, self.current_lng, destination.target_lat, destination.target_lng) < 30:
+                break
             self._step_to(*step)
             yield step
 
@@ -98,7 +95,6 @@ class Stepper(object):
             d_long = (to_lng - from_lng) / steps
 
             total_steps = int(ceil(steps))
-            self.steps = total_steps
             for _ in range(total_steps):
                 from_lat += d_lat
                 from_lng += d_long
@@ -127,12 +123,11 @@ class Stepper(object):
         # type: (float, float, float) -> None
         self.api_wrapper.set_position(lat, lng, alt)
 
-        new_lat, new_lng, new_alt = self.api_wrapper.get_position()
-        self.current_lat = new_lat
-        self.current_lng = new_lng
-        self.current_alt = new_alt
+        self.current_lat = lat
+        self.current_lng = lng
+        self.current_alt = alt
 
-        self.bot.fire("position_updated", coordinates=(new_lat, new_lng, new_alt))
+        self.bot.fire("position_updated", coordinates=(lat, lng, alt))
 
         self.bot.heartbeat()
         sleep(1)  # sleep one second plus a random delta
